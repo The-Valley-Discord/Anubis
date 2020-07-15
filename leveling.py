@@ -9,13 +9,23 @@ def calculate_level(guild_id, xp):
     guild = get_guild_settings(guild_id)
     base = guild[2]
     modifier = guild[3]
-    #     base + (base * (modifier/100) * level) * level
     i = 0
     while True:
-        xp_needed = base + int(base * (modifier / 100) * i) * i
+        xp_needed = base + (round(base * (modifier / 100) * i) * i)
         if xp < xp_needed:
-            return i
+            return i + 1
         i += 1
+
+
+def calculate_xp_needed(guild_id, level):
+    guild = get_guild_settings(guild_id)
+    base = guild[2]
+    modifier = guild[3]
+    level -= 2
+    if level == 0:
+        return 0
+    else:
+        return base + (round(base * (modifier / 100) * level) * level)
 
 
 class Leveling(commands.Cog):

@@ -1,11 +1,10 @@
-
 import discord
 from discord.ext import commands
 
 import database as db
-from leveling import Leveling, calculate_level
+from leveling import Leveling, calculate_level, calculate_xp_needed
 
-bot = commands.Bot(command_prefix="l.")
+bot = commands.Bot(command_prefix=">")
 
 db.init_db()
 bot.add_cog(Leveling(bot))
@@ -151,12 +150,26 @@ async def level(ctx, *arg):
                     pass
                 elif reward1[2] < next_reward[2] or next_reward[2] == 0:
                     next_reward = reward1
+
+            role_reward = ctx.guild.get_role(next_reward[1])
+            xp_current_level = calculate_xp_needed(ctx.guild.id, user_level)
+            xp_next_level = calculate_xp_needed(ctx.guild.id, (user_level + 1))
+            level_progress = retrieved_user[2] - xp_current_level
+            xp_between = xp_next_level - xp_current_level
+            embed = discord.Embed(title=f"Level and EXP for {ctx.author.nick}",
+                                  color=ctx.author.color)
+            embed.add_field(name="XP", value=f"{retrieved_user[2]}", inline=True)
+            embed.add_field(name="Level", value=f"{user_level}", inline=True)
+            embed.add_field(name="Progress", value=f"{level_progress}/{xp_between}", inline=True)
             if next_reward[1] == 0:
-                await ctx.send(f"{user.mention} is currently level {user_level}. No more rewards to gain")
+                embed.add_field(name="Next Reward", value=f"None",
+                                inline=True)
             else:
-                role_reward = ctx.guild.get_role(next_reward[1])
-                await ctx.send(f"{user.mention} is currently level {user_level}. "
-                               f"Gains {role_reward.mention} at level {next_reward[2]}")
+                embed.add_field(name="Next Reward", value=f"{role_reward.mention}\n at level {next_reward[2]}",
+                                inline=True)
+            embed.set_thumbnail(url=ctx.author.avatar_url)
+            embed.set_footer(text=f"{ctx.guild.name}", icon_url=ctx.guild.icon_url)
+            await ctx.send(embed=embed)
 
 
 @commands.check_any(has_permissions())

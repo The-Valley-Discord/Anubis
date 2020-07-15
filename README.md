@@ -9,5 +9,8 @@
 - [x] level command needs permissions check
 - [x] ignore user command
 - [x] ignore channel command
+- [x] make level message an embed
 
+
+- [ ] make a level set output
 - [ ] leaderboard (low prioirity)
