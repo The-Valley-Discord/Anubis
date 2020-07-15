@@ -12,11 +12,16 @@ guild_id integer,
 user_id integer,
 xp integer,
 timeout timestamp,
-ingnore_xp_gain integer
+ignore_xp_gain integer
 );
 
 create table if not exists rewards (
 guild_id integer,
 reward_role integer,
 reward_level integer
+);
+
+create table if not exists ignored_channels (
+guild_id integer,
+channel_id integer
 );

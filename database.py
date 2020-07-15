@@ -54,8 +54,8 @@ def update_channel(channel_id, guild_id):
 
 
 def add_user(user_init):
-    sql = """INSERT INTO user_levels (guild_id, user_id, xp, timeout) 
-        VALUES(?,?,?,?)"""
+    sql = """INSERT INTO user_levels (guild_id, user_id, xp, timeout, ignore_xp_gain) 
+        VALUES(?,?,?,?,?)"""
     c.execute(sql, user_init)
     conn.commit()
 
@@ -70,6 +70,13 @@ def update_user_xp(user_id, guild_id, xp, timeout):
     c.execute("UPDATE user_levels SET xp=:xp, timeout=:timeout "
               "WHERE user_id=:user_id AND guild_id=:guild_id",
               {"xp": xp, "timeout": timeout, "user_id": user_id, "guild_id": guild_id})
+    conn.commit()
+
+
+def ignore_user_xp(user_id, guild_id, is_user_ignored):
+    updated_user = (is_user_ignored, guild_id, user_id)
+    sql = "UPDATE user_levels SET ignore_xp_gain = ? WHERE guild_id = ? AND user_id = ?"
+    c.execute(sql, updated_user)
     conn.commit()
 
 
@@ -112,3 +119,26 @@ def delete_guild_reward(guild_id, reward_role):
     sql = "DELETE from rewards WHERE guild_id = ? AND reward_role = ? "
     c.execute(sql, deleted_reward)
     conn.commit()
+
+
+def add_ignored_channel(guild_id, channel_id):
+    ignored_channel = (guild_id, channel_id)
+    sql = "INSERT INTO ignored_channels(guild_id, channel_id) VALUES(?,?)"
+    c.execute(sql, ignored_channel)
+    conn.commit()
+
+
+def get_ignored_channels(guild_id):
+    guild = (guild_id,)
+    sql = "SELECT * FROM ignored_channels WHERE guild_id = ?"
+    c.execute(sql, guild)
+    ignored_channels = []
+    retrieved_channels = c.fetchall()
+    for channel in retrieved_channels:
+        ignored_channels.append(channel[1])
+    return ignored_channels
+
+
+def delete_ignored_channel(channel_id):
+    sql = "DELETE FROM ignored_channels WHERE channel_id = ?"
+    c.execute(sql, channel_id)

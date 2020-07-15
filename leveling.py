@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 
 from discord.ext import commands
 
-from database import get_guild_settings, get_user, add_user, update_user_xp, get_guild_rewards
+from database import get_guild_settings, get_user, add_user, update_user_xp, get_guild_rewards, get_ignored_channels
 
 
 def calculate_level(guild_id, xp):
@@ -24,7 +24,10 @@ class Leveling(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message):
+        ignored_channels = get_ignored_channels(message.guild.id)
         if message.author.bot:
+            pass
+        elif message.channel.id in ignored_channels:
             pass
         else:
             guild = get_guild_settings(message.guild.id)
@@ -33,11 +36,13 @@ class Leveling(commands.Cog):
             timeout = datetime.utcnow() + text_time
             user = get_user(message.author.id, message.guild.id)
             if user is None:
-                new_user = (message.guild.id, message.author.id, 0, timeout)
+                new_user = (message.guild.id, message.author.id, 0, timeout, False)
                 add_user(new_user)
                 user = get_user(message.author.id, message.guild.id)
             next_xp_time = datetime.strptime(user[3], "%Y-%m-%d %H:%M:%S.%f")
-            if next_xp_time < datetime.utcnow():
+            if user[4]:
+                pass
+            elif next_xp_time < datetime.utcnow():
                 new_xp = user[2] + amount
                 update_user_xp(message.author.id, message.guild.id, new_xp, timeout)
                 user_level = calculate_level(message.guild.id, new_xp)

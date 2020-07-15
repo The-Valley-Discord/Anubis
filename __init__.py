@@ -1,3 +1,4 @@
+
 import discord
 from discord.ext import commands
 
@@ -128,29 +129,111 @@ async def levelset(ctx, setting, value):
 
 @bot.command()
 async def level(ctx, *arg):
-    if len(arg) == 0:
-        str_user = f'{ctx.author.id}'
-    else:
-        str_user = arg[0]
+    guild = db.get_guild_settings(ctx.guild.id)
+    if ctx.author.guild_permissions.manage_messages or ctx.channel.id == guild[5] or guild[5] == 0:
+        if len(arg) == 0:
+            str_user = f'{ctx.author.id}'
+        else:
+            str_user = arg[0]
+        strip = ["<", ">", "#", "@", "!", "&"]
+        for item in strip:
+            str_user = str_user.strip(item)
+        user = ctx.guild.get_member(int(str_user))
+        if user is None:
+            await ctx.send("Please enter a valid user.")
+        else:
+            retrieved_user = db.get_user(user.id, ctx.guild.id)
+            user_level = calculate_level(retrieved_user[0], retrieved_user[2])
+            rewards = db.get_guild_rewards(ctx.guild.id)
+            next_reward = (ctx.guild.id, 0, 0)
+            for reward1 in rewards:
+                if reward1[2] < user_level:
+                    pass
+                elif reward1[2] < next_reward[2] or next_reward[2] == 0:
+                    next_reward = reward1
+            if next_reward[1] == 0:
+                await ctx.send(f"{user.mention} is currently level {user_level}. No more rewards to gain")
+            else:
+                role_reward = ctx.guild.get_role(next_reward[1])
+                await ctx.send(f"{user.mention} is currently level {user_level}. "
+                               f"Gains {role_reward.mention} at level {next_reward[2]}")
+
+
+@commands.check_any(has_permissions())
+@bot.command()
+async def award(ctx, user, amount):
+    str_user = user.lower()
     strip = ["<", ">", "#", "@", "!", "&"]
     for item in strip:
         str_user = str_user.strip(item)
     user = ctx.guild.get_member(int(str_user))
-    retrieved_user = db.get_user(user.id, ctx.guild.id)
-    user_level = calculate_level(retrieved_user[0], retrieved_user[2])
-    rewards = db.get_guild_rewards(ctx.guild.id)
-    next_reward = (ctx.guild.id, 0, 0)
-    for reward1 in rewards:
-        if reward1[2] < user_level:
-            pass
-        elif reward1[2] < next_reward[2] or next_reward[2] == 0:
-            next_reward = reward1
-    if next_reward[1] == 0:
-        await ctx.send(f"{user.mention} is currently level {user_level}. No more rewards to gain")
+    if user is None:
+        await ctx.send("Please enter a valid user.")
+    elif int(amount) < 1:
+        await ctx.send("Please enter a positive number.")
     else:
-        role_reward = ctx.guild.get_role(next_reward[1])
-        await ctx.send(f"{user.mention} is currently level {user_level}. "
-                       f"Gains {role_reward.mention} at level {next_reward[2]}")
+        retrieved_user = db.get_user(user.id, ctx.guild.id)
+        new_xp = retrieved_user[2] + int(amount)
+        db.update_user_xp(user.id, ctx.guild.id, new_xp, retrieved_user[3])
+        await ctx.send(f"{user.mention} has been awarded {amount} xp")
+
+
+@commands.check_any(has_permissions())
+@bot.command()
+async def reclaim(ctx, user, amount):
+    str_user = user.lower()
+    strip = ["<", ">", "#", "@", "!", "&"]
+    for item in strip:
+        str_user = str_user.strip(item)
+    user = ctx.guild.get_member(int(str_user))
+    if user is None:
+        await ctx.send("Please enter a valid user.")
+    else:
+        if amount.lower() != "all":
+            pass
+        elif amount[0] == "-":
+            await ctx.send("Please enter a positive number.")
+        retrieved_user = db.get_user(user.id, ctx.guild.id)
+        if amount.lower() == "all":
+            new_xp = 0
+        else:
+            new_xp = retrieved_user[2] - int(amount)
+        db.update_user_xp(user.id, ctx.guild.id, new_xp, retrieved_user[3])
+        await ctx.send(f"{user.mention} has had {amount} xp reclaimed")
+
+
+@commands.check_any(has_permissions())
+@bot.command()
+async def ignore(ctx, *, arg):
+    if len(ctx.message.mentions) > 0:
+        mention_list = ""
+        for member in ctx.message.mentions:
+            db.ignore_user_xp(member.id, ctx.guild.id, True)
+            mention_list += f"{member.mention}"
+        await ctx.send(f"{mention_list} can no longer gain xp.")
+    if len(ctx.message.channel_mentions) > 0:
+        mention_list = ""
+        for channel in ctx.message.channel_mentions:
+            db.add_ignored_channel(ctx.guild.id, channel.id)
+            mention_list += f"{channel.mention}"
+        await ctx.send(f"Can no longer gain xp in {mention_list}")
+
+
+@commands.check_any(has_permissions())
+@bot.command()
+async def recog(ctx, *, arg):
+    if len(ctx.message.mentions) > 0:
+        mention_list = ""
+        for member in ctx.message.mentions:
+            db.ignore_user_xp(member.id, ctx.guild.id, False)
+            mention_list += f"{member.mention}"
+        await ctx.send(f"{mention_list} can no longer gain xp.")
+    if len(ctx.message.channel_mentions) > 0:
+        mention_list = ""
+        for channel in ctx.message.channel_mentions:
+            db.delete_ignored_channel(channel.id)
+            mention_list += f"{channel.mention}"
+        await ctx.send(f"Can gain xp in {mention_list} again")
 
 
 with open("token", "r") as f:
