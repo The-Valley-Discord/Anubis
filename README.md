@@ -10,7 +10,8 @@
 - [x] ignore user command
 - [x] ignore channel command
 - [x] make level message an embed
+- [x] add logging channel
+- [x] make a level set output
 
 
-- [ ] make a level set output
 - [ ] leaderboard (low prioirity)

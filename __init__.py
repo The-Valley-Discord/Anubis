@@ -30,7 +30,7 @@ async def on_ready():
     for guild in bot.guilds:
         fetched_guild = db.get_guild_settings(guild.id)
         if fetched_guild is None:
-            new_guild = (guild.id, 3, 15, 50, 1, 0)
+            new_guild = (guild.id, 3, 15, 50, 5, 0, 0)
             db.add_guild_settings(new_guild)
 
 
@@ -38,7 +38,7 @@ async def on_ready():
 async def on_guild_join(guild):
     fetched_guild = db.get_guild_settings(guild.id)
     if fetched_guild is None:
-        new_guild = (guild.id, 3, 15, 50, 1, 0)
+        new_guild = (guild.id, 3, 15, 50, 5, 0, 0)
         db.add_guild_settings(new_guild)
 
 
@@ -93,12 +93,34 @@ async def remove(ctx, role):
 
 @commands.check_any(has_permissions())
 @bot.command()
-async def levelset(ctx, setting, value):
+async def levelset(ctx, setting="view", value="view"):
     strip = ["<", ">", "#", "@", "!", "&"]
     str_value = value.lower()
     for item in strip:
         str_value = str_value.strip(item)
-    if is_number(str_value) is False:
+    if value == "view":
+        guild = db.get_guild_settings(ctx.guild.id)
+        user_channel = ctx.guild.get_channel(guild[5])
+        if user_channel is None:
+            user_channel = "None"
+        else:
+            user_channel = user_channel.mention
+        log_channel = ctx.guild.get_channel(guild[6])
+        if log_channel is None:
+            log_channel = "None"
+        else:
+            log_channel = log_channel.mention
+        embed = discord.Embed(title="Current Level System settings",
+                              description=(
+                                  f'**Texttime:** {guild[1]}\n'
+                                  f'**Base:** {guild[2]}\n'
+                                  f'**Modifier:** {guild[3]}\n'
+                                  f'**Amount:** {guild[4]}\n'
+                                  f'**User Command Channel:** {user_channel}\n'
+                                  f'**Log Channel:** {log_channel}\n'
+                              ))
+        await ctx.send(embed=embed)
+    elif is_number(str_value) is False:
         await ctx.send("please enter a valid number for the value")
     elif setting == "texttime":
         db.update_text_time(str_value, ctx.guild.id)
@@ -122,8 +144,7 @@ async def levelset(ctx, setting, value):
         else:
             db.update_channel(channel.id, ctx.guild.id)
             await ctx.send(f"Command channel now set to {channel.mention}.")
-    else:
-        await ctx.send("Please enter a valid setting type.")
+
 
 
 @bot.command()

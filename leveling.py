@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 
+import discord
 from discord.ext import commands
 
 from database import get_guild_settings, get_user, add_user, update_user_xp, get_guild_rewards, get_ignored_channels
@@ -54,14 +55,26 @@ class Leveling(commands.Cog):
                 pass
             elif next_xp_time < datetime.utcnow():
                 new_xp = user[2] + amount
+                previous_level = calculate_level(message.guild.id, user[2])
                 update_user_xp(message.author.id, message.guild.id, new_xp, timeout)
                 user_level = calculate_level(message.guild.id, new_xp)
                 rewards = get_guild_rewards(message.guild.id)
+                log = message.guild.get_channel(guild[6])
+                if user_level > previous_level and log is not None:
+                    embed = discord.Embed(description=f"{message.author.name} has leveled to level {user_level}.")
+                    embed.set_author(name=f"{message.author.id}")
+                    embed.timestamp = datetime.utcnow()
+                    await log.send(embed=embed)
                 if len(rewards) > 0:
                     for reward in rewards:
-                        for role in message.author.roles:
-                            if reward[1] == role.id:
-                                pass
-                            elif reward[2] < user_level:
-                                role = message.guild.get_role(reward[1])
-                                await message.author.add_roles(role)
+                        role = message.guild.get_role(reward[1])
+                        if role in message.author.roles:
+                            pass
+                        elif reward[2] <= user_level:
+                            await message.author.add_roles(role)
+                            if log is not None:
+                                embed = discord.Embed(
+                                    description=f"{message.author.name} has earned {role.mention}")
+                                embed.set_author(name=f"{message.author.id}")
+                                embed.timestamp = datetime.utcnow()
+                                await log.send(embed=embed)

@@ -4,7 +4,8 @@ text_time integer,
 base integer,
 modifier integer,
 amount integer,
-channel integer
+user_channel integer,
+log_channel integer
 );
 
 create table if not exists user_levels (

@@ -12,8 +12,8 @@ def init_db():
 
 
 def add_guild_settings(guild_init):
-    sql = """INSERT INTO level_settings (guild_id, text_time, base, modifier, amount, channel) 
-    VALUES(?,?,?,?,?,?)"""
+    sql = """INSERT INTO level_settings (guild_id, text_time, base, modifier, amount, user_channel, log_channel) 
+    VALUES(?,?,?,?,?,?,?)"""
     c.execute(sql, guild_init)
     conn.commit()
 
@@ -48,8 +48,14 @@ def update_amount(amount, guild_id):
 
 
 def update_channel(channel_id, guild_id):
-    c.execute("UPDATE level_settings SET channel=:channel WHERE guild_id=:guild_id",
+    c.execute("UPDATE level_settings SET user_channel=:channel WHERE guild_id=:guild_id",
               {"channel": channel_id, "guild_id": guild_id})
+    conn.commit()
+
+
+def update_log_channel(channel_id, guild_id):
+    c.execute("UPDATE level_settings SET log_channel=:channel_id WHERE guild_id=:guild_id",
+              {"channel_id": channel_id, "guild_id": guild_id})
     conn.commit()
 
 
