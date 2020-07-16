@@ -24,6 +24,8 @@ def calculate_xp_needed(guild_id, level):
     modifier = guild[3]
     level -= 2
     if level == 0:
+        return base
+    elif level < 0:
         return 0
     else:
         return base + (round(base * (modifier / 100) * level) * level)

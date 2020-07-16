@@ -116,34 +116,44 @@ async def levelset(ctx, setting="view", value="view"):
                                   f'**Base:** {guild[2]}\n'
                                   f'**Modifier:** {guild[3]}\n'
                                   f'**Amount:** {guild[4]}\n'
-                                  f'**User Command Channel:** {user_channel}\n'
-                                  f'**Log Channel:** {log_channel}\n'
+                                  f'**User-Channel:** {user_channel}\n'
+                                  f'**Log-Channel:** {log_channel}\n'
                               ))
         await ctx.send(embed=embed)
     elif is_number(str_value) is False:
         await ctx.send("please enter a valid number for the value")
-    elif setting == "texttime":
+    elif setting.lower() == "texttime":
         db.update_text_time(str_value, ctx.guild.id)
         await ctx.send(f"texttime now set to {str_value} minutes.")
-    elif setting == "base":
+    elif setting.lower() == "base":
         db.update_base(str_value, ctx.guild.id)
         await ctx.send(f"Base XP now set to {str_value}.")
-    elif setting == "modifier":
+    elif setting.lower() == "modifier":
         db.update_modifier(str_value, ctx.guild.id)
         await ctx.send(f"Modifier now set to {str_value}.")
-    elif setting == "amount":
+    elif setting.lower() == "amount":
         db.update_amount(str_value, ctx.guild.id)
         await ctx.send(f"XP Amount now set to {str_value} per valid message.")
-    elif setting == "channel":
-        channel = ctx.guild.get_channel(int(str_value))
+    elif setting.lower() == "user-channel":
+        user_channel = ctx.guild.get_channel(int(str_value))
         if int(str_value) == 0:
             db.update_channel(str_value, ctx.guild.id)
             await ctx.send(f"Command channel disabled.")
-        elif channel is None:
+        elif user_channel is None:
             await ctx.send("Please enter a valid channel.")
         else:
-            db.update_channel(channel.id, ctx.guild.id)
-            await ctx.send(f"Command channel now set to {channel.mention}.")
+            db.update_channel(user_channel.id, ctx.guild.id)
+            await ctx.send(f"Command channel now set to {user_channel.mention}.")
+    elif setting.lower() == "log-channel":
+        log_channel = ctx.guild.get_channel(int(str_value))
+        if int(str_value) == 0:
+            db.update_channel(str_value, ctx.guild.id)
+            await ctx.send(f"Command channel disabled.")
+        elif log_channel is None:
+            await ctx.send("Please enter a valid channel.")
+        else:
+            db.update_channel(log_channel.id, ctx.guild.id)
+            await ctx.send(f"Command channel now set to {log_channel.mention}.")
 
 
 
@@ -268,6 +278,24 @@ async def recog(ctx, *, arg):
             db.delete_ignored_channel(channel.id)
             mention_list += f"{channel.mention}"
         await ctx.send(f"Can gain xp in {mention_list} again")
+
+
+bot.remove_command("help")
+
+
+@bot.command()
+async def help(ctx):
+    await ctx.send(
+        "`>award <user> <amount>` grants the user xp amount\n"
+        "`>reclaim <user> <amount>` removes xp amount or use all for all xp\n"
+        "`>level <user>` displays experience info of specified user. leave blank for self\n"
+        "`>reward <role> <level>` adds reward to server at level\n"
+        "`>remove <role>` removes reward from server\n"
+        "`>ignore <user or channel mention>` ignores xp gain of user or in channel. Can take multiple users and channels at once\n"
+        "`>recog <useror channel mention>` restores xp gain to users and channels\n"
+        "`>levelset <setting> <value>` sets setting to value. Leave blank for current settings"
+    )
+
 
 
 with open("token", "r") as f:

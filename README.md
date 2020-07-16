@@ -12,6 +12,7 @@
 - [x] make level message an embed
 - [x] add logging channel
 - [x] make a level set output
+- [x] Help Command
 
 
 - [ ] leaderboard (low prioirity)
