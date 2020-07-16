@@ -138,22 +138,22 @@ async def levelset(ctx, setting="view", value="view"):
         user_channel = ctx.guild.get_channel(int(str_value))
         if int(str_value) == 0:
             db.update_channel(str_value, ctx.guild.id)
-            await ctx.send(f"Command channel disabled.")
+            await ctx.send(f"User channel disabled.")
         elif user_channel is None:
             await ctx.send("Please enter a valid channel.")
         else:
             db.update_channel(user_channel.id, ctx.guild.id)
-            await ctx.send(f"Command channel now set to {user_channel.mention}.")
+            await ctx.send(f"User channel now set to {user_channel.mention}.")
     elif setting.lower() == "log-channel":
         log_channel = ctx.guild.get_channel(int(str_value))
         if int(str_value) == 0:
             db.update_channel(str_value, ctx.guild.id)
-            await ctx.send(f"Command channel disabled.")
+            await ctx.send(f"Log Channel disabled.")
         elif log_channel is None:
             await ctx.send("Please enter a valid channel.")
         else:
-            db.update_channel(log_channel.id, ctx.guild.id)
-            await ctx.send(f"Command channel now set to {log_channel.mention}.")
+            db.update_log_channel(log_channel.id, ctx.guild.id)
+            await ctx.send(f"Log Channel now set to {log_channel.mention}.")
 
 
 
