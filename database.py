@@ -72,6 +72,12 @@ def get_user(user_id, guild_id):
     return c.fetchone()
 
 
+def get_ranked_users(guild_id):
+    c.execute("SELECT * FROM user_levels WHERE guild_id=:guild_id ORDER BY xp DESC",
+              {"guild_id": guild_id})
+    return c.fetchall()
+
+
 def update_user_xp(user_id, guild_id, xp, timeout):
     c.execute("UPDATE user_levels SET xp=:xp, timeout=:timeout "
               "WHERE user_id=:user_id AND guild_id=:guild_id",
