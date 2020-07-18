@@ -1,3 +1,5 @@
+from datetime import datetime
+
 import discord
 from discord.ext import commands
 
@@ -200,6 +202,43 @@ async def level(ctx, *arg):
                                 inline=True)
             embed.set_thumbnail(url=ctx.author.avatar_url)
             embed.set_footer(text=f"{ctx.guild.name}", icon_url=ctx.guild.icon_url)
+            await ctx.send(embed=embed)
+
+
+@bot.command()
+async def leaderboard(ctx, user="all"):
+    guild = db.get_guild_settings(ctx.guild.id)
+    if ctx.author.guild_permissions.manage_messages or ctx.channel.id == guild[5] or guild[5] == 0:
+        ranked_users = db.get_ranked_users(ctx.guild.id)
+        if user.lower() == "all":
+            leader_board_text = ""
+            i = 0
+            while i < 10 and i < len(ranked_users):
+                retrieved_user = ctx.guild.get_member(ranked_users[i][1])
+                leader_board_text += f"**{i + 1}** {retrieved_user.mention} **XP:** {ranked_users[i][2]}\n"
+                i += 1
+            embed = discord.Embed(title="LeaderBoard", description=leader_board_text, color=0xFAD766)
+            embed.set_footer(text=f"Total Users {len(ranked_users)}")
+            embed.timestamp = datetime.utcnow()
+            await ctx.send(embed=embed)
+        if user.lower() == "me":
+            requesting_user = db.get_user(ctx.author.id, ctx.guild.id)
+            leader_board_text = ""
+            i = 0
+            user_index = ranked_users.index(requesting_user)
+            if user_index - 4 < 0:
+                start_index = 0
+            else:
+                start_index = user_index - 4
+
+            while i < 9 and i < len(ranked_users) and start_index < len(ranked_users):
+                retrieved_user = ctx.guild.get_member(ranked_users[start_index][1])
+                leader_board_text += f"**{start_index + 1}** {retrieved_user.mention} **XP:** {ranked_users[start_index][2]}\n"
+                i += 1
+                start_index += 1
+            embed = discord.Embed(title="LeaderBoard", description=leader_board_text, color=0xFAD766)
+            embed.set_footer(text=f"Total Users {len(ranked_users)}")
+            embed.timestamp = datetime.utcnow()
             await ctx.send(embed=embed)
 
 
