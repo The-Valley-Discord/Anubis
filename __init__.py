@@ -156,15 +156,14 @@ async def levelset(ctx, setting="view", value="view"):
             await ctx.send(f"Log Channel now set to {log_channel.mention}.")
 
 
-
 @bot.command()
-async def level(ctx, *arg):
+async def level(ctx, user="me"):
     guild = db.get_guild_settings(ctx.guild.id)
     if ctx.author.guild_permissions.manage_messages or ctx.channel.id == guild[5] or guild[5] == 0:
-        if len(arg) == 0:
+        if user == "me":
             str_user = f'{ctx.author.id}'
         else:
-            str_user = arg[0]
+            str_user = user
         strip = ["<", ">", "#", "@", "!", "&"]
         for item in strip:
             str_user = str_user.strip(item)
@@ -187,8 +186,8 @@ async def level(ctx, *arg):
             xp_next_level = calculate_xp_needed(ctx.guild.id, (user_level + 1))
             level_progress = retrieved_user[2] - xp_current_level
             xp_between = xp_next_level - xp_current_level
-            embed = discord.Embed(title=f"Level and EXP for {ctx.author.nick}",
-                                  color=ctx.author.color)
+            embed = discord.Embed(title=f"Level and EXP for {user.nick}",
+                                  color=user.color)
             embed.add_field(name="XP", value=f"{retrieved_user[2]}", inline=True)
             embed.add_field(name="Level", value=f"{user_level}", inline=True)
             embed.add_field(name="Progress", value=f"{level_progress}/{xp_between}", inline=True)
@@ -198,7 +197,7 @@ async def level(ctx, *arg):
             else:
                 embed.add_field(name="Next Reward", value=f"{role_reward.mention}\n at level {next_reward[2]}",
                                 inline=True)
-            embed.set_thumbnail(url=ctx.author.avatar_url)
+            embed.set_thumbnail(url=user.avatar_url)
             embed.set_footer(text=f"{ctx.guild.name}", icon_url=ctx.guild.icon_url)
             await ctx.send(embed=embed)
 
@@ -292,10 +291,10 @@ async def help(ctx):
         "`>reward <role> <level>` adds reward to server at level\n"
         "`>remove <role>` removes reward from server\n"
         "`>ignore <user or channel mention>` ignores xp gain of user or in channel. Can take multiple users and channels at once\n"
-        "`>recog <useror channel mention>` restores xp gain to users and channels\n"
-        "`>levelset <setting> <value>` sets setting to value. Leave blank for current settings"
+        "`>recog <user or channel mention>` restores xp gain to users and channels\n"
+        "`>levelset <setting> <value>` sets setting to value. Leave blank for current settings\n"
+        "`>leaderboard <me>` show leaderboard. If no argument returns top 10, with me returns 4 above and 4 below you with rank."
     )
-
 
 
 with open("token", "r") as f:
