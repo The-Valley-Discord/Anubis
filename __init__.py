@@ -178,7 +178,7 @@ async def level(ctx, user="me"):
             rewards = db.get_guild_rewards(ctx.guild.id)
             next_reward = (ctx.guild.id, 0, 0)
             for reward1 in rewards:
-                if reward1[2] < user_level:
+                if reward1[2] <= user_level:
                     pass
                 elif reward1[2] < next_reward[2] or next_reward[2] == 0:
                     next_reward = reward1
