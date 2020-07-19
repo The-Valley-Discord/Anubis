@@ -188,7 +188,7 @@ async def level(ctx, user="me"):
             xp_next_level = calculate_xp_needed(ctx.guild.id, (user_level + 1))
             level_progress = retrieved_user[2] - xp_current_level
             xp_between = xp_next_level - xp_current_level
-            embed = discord.Embed(title=f"Level and EXP for {user.nick}",
+            embed = discord.Embed(title=f"Level and EXP for {user.display_name}",
                                   color=user.color)
             embed.add_field(name="XP", value=f"{retrieved_user[2]}", inline=True)
             embed.add_field(name="Level", value=f"{user_level}", inline=True)
