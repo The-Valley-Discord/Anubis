@@ -8,7 +8,7 @@ from discord.ext.commands import Greedy
 import database as db
 from leveling import Leveling, calculate_level, calculate_xp_needed
 
-bot = commands.Bot(command_prefix="anubis.")
+bot = commands.Bot(command_prefix=">")
 
 db.init_db()
 bot.add_cog(Leveling(bot))
