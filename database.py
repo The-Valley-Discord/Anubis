@@ -152,5 +152,6 @@ def get_ignored_channels(guild_id):
 
 
 def delete_ignored_channel(channel_id):
+    channel = (channel_id,)
     sql = "DELETE FROM ignored_channels WHERE channel_id = ?"
-    c.execute(sql, channel_id)
+    c.execute(sql, channel)
