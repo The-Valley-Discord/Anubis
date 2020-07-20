@@ -272,8 +272,10 @@ async def ignore(ctx, args: Greedy[typing.Union[discord.Member, discord.TextChan
             mention_list += f"{arg.mention} "
         if isinstance(arg, str):
             failed_list += " " + arg
-    await ctx.send(f"{mention_list} are now ignored.")
-    await ctx.send(f"Could not process {failed_list}")
+    if len(mention_list) > 0:
+        await ctx.send(f"{mention_list} are now ignored.")
+    if len(failed_list) > 0:
+        await ctx.send(f"Could not process {failed_list}")
 
 
 @commands.check_any(has_permissions())
@@ -290,8 +292,10 @@ async def recog(ctx, args: Greedy[typing.Union[discord.Member, discord.TextChann
             mention_list += f"{arg.mention} "
         if isinstance(arg, str):
             failed_list += " " + arg
-    await ctx.send(f"{mention_list} are no longer ignored.")
-    await ctx.send(f"Could not process {failed_list}")
+    if len(mention_list) > 0:
+        await ctx.send(f"{mention_list} are no longer ignored.")
+    if len(failed_list) > 0:
+        await ctx.send(f"Could not process {failed_list}")
 
 
 bot.remove_command("help")
