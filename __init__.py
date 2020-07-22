@@ -197,8 +197,9 @@ async def leaderboard(ctx, user="all"):
             leader_board_text = ""
             i = 0
             while i < 10 and i < len(ranked_users):
-                retrieved_user = ctx.guild.get_member(ranked_users[i][1])
-                leader_board_text += f"**{i + 1}** {retrieved_user.mention} **XP:** {ranked_users[i][2]}\n"
+                retrieved_user = bot.get_user(ranked_users[i][1])
+                if retrieved_user is not None:
+                    leader_board_text += f"**{i + 1}** {retrieved_user.mention} **XP:** {ranked_users[i][2]}\n"
                 i += 1
             embed = discord.Embed(title="LeaderBoard", description=leader_board_text, color=0xFAD766)
             embed.set_footer(text=f"Total Users {len(ranked_users)}")
@@ -215,8 +216,9 @@ async def leaderboard(ctx, user="all"):
                 start_index = user_index - 4
 
             while i < 9 and i < len(ranked_users) and start_index < len(ranked_users):
-                retrieved_user = ctx.guild.get_member(ranked_users[start_index][1])
-                leader_board_text += f"**{start_index + 1}** {retrieved_user.mention} " \
+                retrieved_user = bot.get_user(ranked_users[start_index][1])
+                if retrieved_user is not None:
+                    leader_board_text += f"**{start_index + 1}** {retrieved_user.mention} " \
                                      f"**XP:** {ranked_users[start_index][2]}\n"
                 i += 1
                 start_index += 1
