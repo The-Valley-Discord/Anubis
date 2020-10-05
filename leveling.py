@@ -53,7 +53,10 @@ class Leveling(commands.Cog):
                 add_user(new_user)
                 user = get_user(message.author.id, message.guild.id)
             next_xp_time = datetime.strptime(user[3], "%Y-%m-%d %H:%M:%S.%f")
-            if user[4]:
+            freeze_role = 0
+            if message.guild.id == 539925898128785460:
+                freeze_role = self.bot.get_guild(539925898128785460).get_role(732962687360827472)
+            if user[4] or freeze_role in message.author.roles:
                 pass
             elif next_xp_time < datetime.utcnow():
                 new_xp = user[2] + amount

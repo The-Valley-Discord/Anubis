@@ -8,7 +8,9 @@ from discord.ext.commands import Greedy
 import database as db
 from leveling import Leveling, calculate_level, calculate_xp_needed
 
-bot = commands.Bot(command_prefix=">")
+intents = discord.Intents.default()
+intents.members = True
+bot = commands.Bot(command_prefix="anub.", intents=intents)
 
 db.init_db()
 bot.add_cog(Leveling(bot))
