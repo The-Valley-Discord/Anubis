@@ -10,7 +10,7 @@ from leveling import Leveling, calculate_level, calculate_xp_needed
 
 intents = discord.Intents.default()
 intents.members = True
-bot = commands.Bot(command_prefix="anub.", intents=intents)
+bot = commands.Bot(command_prefix=">", intents=intents)
 
 db.init_db()
 bot.add_cog(Leveling(bot))
