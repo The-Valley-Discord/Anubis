@@ -38,7 +38,7 @@ class Leveling(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, message):
         ignored_channels = get_ignored_channels(message.guild.id)
-        if message.author.bot:
+        if message.author.bot or message.is_system():
             pass
         elif message.channel.id in ignored_channels:
             pass
