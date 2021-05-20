@@ -38,7 +38,7 @@ class Leveling(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, message):
         ignored_channels = get_ignored_channels(message.guild.id)
-        if message.author.bot:
+        if message.author.bot or message.is_system():
             pass
         elif message.channel.id in ignored_channels:
             pass
@@ -53,7 +53,10 @@ class Leveling(commands.Cog):
                 add_user(new_user)
                 user = get_user(message.author.id, message.guild.id)
             next_xp_time = datetime.strptime(user[3], "%Y-%m-%d %H:%M:%S.%f")
-            if user[4]:
+            freeze_role = 0
+            if message.guild.id == 539925898128785460:
+                freeze_role = self.bot.get_guild(539925898128785460).get_role(627499927299424266)
+            if user[4] or freeze_role in message.author.roles:
                 pass
             elif next_xp_time < datetime.utcnow():
                 new_xp = user[2] + amount
