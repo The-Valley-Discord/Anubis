@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 import discord
 from discord.ext import commands
 
-from database import get_guild_settings, get_user, add_user, update_user_xp, get_guild_rewards, get_ignored_channels
+from old_database import get_guild_settings, get_user, add_user, update_user_xp, get_guild_rewards, get_ignored_channels
 
 
 def calculate_level(guild_id, xp):
