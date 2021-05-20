@@ -5,7 +5,7 @@ import discord
 from discord.ext import commands
 from discord.ext.commands import Greedy
 
-import database as db
+import old_database as db
 from leveling import Leveling, calculate_level, calculate_xp_needed
 
 intents = discord.Intents.default()
@@ -322,5 +322,5 @@ async def help(ctx):
     )
 
 
-with open("token", "r") as f:
+with open("../token", "r") as f:
     bot.run(f.readline().strip())
