@@ -1,7 +1,6 @@
 import logging
 import sqlite3
 from pathlib import Path
-
 from typing import List
 
 from models import *
@@ -55,7 +54,8 @@ class Guilds:
         guild = None
         try:
             guild = self.conn.execute(
-                "SELECT * FROM level_settings WHERE guild_id=:guild_id", {"guild_id": guild_id}
+                "SELECT * FROM level_settings WHERE guild_id=:guild_id",
+                {"guild_id": guild_id},
             ).fetchone()
         except sqlite3.DatabaseError:
             pass
@@ -94,7 +94,7 @@ class Guilds:
                         "amount": guild.reward_amount,
                         "user_channel": guild.user_channel,
                         "log_channel": guild.log_channel,
-                        "guild_id": guild.id
+                        "guild_id": guild.id,
                     },
                 )
                 self.conn.commit()
@@ -109,7 +109,7 @@ class Guilds:
                     guild.modifier,
                     guild.reward_amount,
                     guild.user_channel,
-                    guild.log_channel
+                    guild.log_channel,
                 )
                 sql = (
                     "INSERT INTO level_settings (guild_id, text_time, base, modifier, amount, user_channel, "
@@ -127,11 +127,13 @@ class Users:
         self.conn = conn
         self.database = database
 
-    def get(self, user_id, guild_id):
+    def get(self, user_id: int, guild_id: int) -> User:
         user = None
         try:
-            user = self.conn.execute("SELECT * FROM user_levels WHERE user_id=:user_id AND guild_id=:guild_id",
-                                     {"user_id": user_id, "guild_id": guild_id}).fetchone()
+            user = self.conn.execute(
+                "SELECT * FROM user_levels WHERE user_id=:user_id AND guild_id=:guild_id",
+                {"user_id": user_id, "guild_id": guild_id},
+            ).fetchone()
         except sqlite3.DatabaseError:
             pass
         finally:
@@ -141,13 +143,13 @@ class Users:
                     self.database.guilds.get_settings(user["guild_id"]),
                     user["xp"],
                     user["timeout"],
-                    bool(user["ignore_xp_gain"])
+                    bool(user["ignore_xp_gain"]),
                 )
                 if user
                 else None
             )
 
-    def save(self, user: User):
+    def save(self, user: User) -> User:
         retrieved_user = self.get(user.id, user.guild.id)
         if retrieved_user:
             try:
@@ -163,7 +165,7 @@ class Users:
                         "timeout": user.timeout,
                         "ignore_xp_gain": user.ignore_xp_gain,
                         "user_id": user.id,
-                        "guild_id": user.guild.id
+                        "guild_id": user.guild.id,
                     },
                 )
             except sqlite3.DatabaseError:
@@ -175,7 +177,7 @@ class Users:
                     user.id,
                     user.xp,
                     user.timeout,
-                    user.ignore_xp_gain
+                    user.ignore_xp_gain,
                 )
                 sql = (
                     "INSERT INTO user_levels (guild_id, user_id, xp, timeout, ignore_xp_gain) "
@@ -187,9 +189,11 @@ class Users:
                 pass
         return self.get(user.id, user.guild.id)
 
-    def get_ranked_users(self, guild_id):
-        users = self.conn.execute("SELECT * FROM user_levels WHERE guild_id=:guild_id ORDER BY xp DESC",
-                                  {"guild_id": guild_id}).fetchall()
+    def get_ranked_users(self, guild_id: int) -> List[User]:
+        users = self.conn.execute(
+            "SELECT * FROM user_levels WHERE guild_id=:guild_id ORDER BY xp DESC",
+            {"guild_id": guild_id},
+        ).fetchall()
         guild = self.database.guilds.get_settings(guild_id)
         objectified_users: List[User] = [
             User(
@@ -197,8 +201,10 @@ class Users:
                 guild,
                 user["xp"],
                 user["timeout"],
-                bool(user["ignore_xp_gain"])
-            ) for user in users]
+                bool(user["ignore_xp_gain"]),
+            )
+            for user in users
+        ]
         return objectified_users
 
 
@@ -207,12 +213,13 @@ class Rewards:
         self.conn = conn
         self.database = database
 
-    def get(self, guild_id: int, role_id: int):
+    def get(self, guild_id: int, role_id: int) -> Reward:
         reward = None
         try:
             reward = self.conn.execute(
                 "SELECT * FROM rewards WHERE guild_id=:guild_id AND reward_role=:reward_role",
-                {"guild_id": guild_id, "reward_role": role_id}).fetchone()
+                {"guild_id": guild_id, "reward_role": role_id},
+            ).fetchone()
         except sqlite3.DatabaseError:
             pass
         finally:
@@ -220,32 +227,28 @@ class Rewards:
                 Reward(
                     self.database.guilds.get_settings(reward["guild_id"]),
                     reward["reward_role"],
-                    reward["reward_level"]
+                    reward["reward_level"],
                 )
                 if reward
                 else None
             )
 
-    def get_all(self, guild_id: int):
+    def get_all(self, guild_id: int) -> List[Reward]:
         rewards = []
         try:
             rewards = self.conn.execute(
-                "SELECT * FROM rewards WHERE guild_id=:guild_id",
-                {"guild_id": guild_id}).fetchall()
+                "SELECT * FROM rewards WHERE guild_id=:guild_id", {"guild_id": guild_id}
+            ).fetchall()
         except sqlite3.DatabaseError:
             pass
         finally:
             guild = self.database.guilds.get_settings(guild_id)
             return [
-                Reward(
-                    guild,
-                    reward["reward_role"],
-                    reward["reward_level"]
-                )
+                Reward(guild, reward["reward_role"], reward["reward_level"])
                 for reward in rewards
             ]
 
-    def save(self, reward: Reward):
+    def save(self, reward: Reward) -> Reward:
         retrieved_reward = self.get(reward.guild.id, reward.role)
         if retrieved_reward:
             try:
@@ -256,19 +259,15 @@ class Rewards:
                     {
                         "reward_level": reward.level,
                         "guild_id": reward.guild.id,
-                        "reward_role": reward.role
-                    }
+                        "reward_role": reward.role,
+                    },
                 )
                 self.conn.commit()
             except sqlite3.DatabaseError:
                 pass
         else:
             try:
-                values = (
-                    reward.guild.id,
-                    reward.role,
-                    reward.level
-                )
+                values = (reward.guild.id, reward.role, reward.level)
                 sql = "INSERT INTO rewards (guild_id, reward_role, reward_level) VALUES(?,?,?)"
                 self.conn.execute(sql, values)
                 self.conn.commit()
@@ -278,11 +277,10 @@ class Rewards:
 
     def delete(self, guild_id: int, role_id: int) -> None:
         try:
-            self.conn.execute("DELETE from rewards WHERE guild_id=:guild_id AND reward_role=:reward_role",
-                              {
-                                  "guild_id": guild_id,
-                                  "reward_role": role_id
-                              })
+            self.conn.execute(
+                "DELETE from rewards WHERE guild_id=:guild_id AND reward_role=:reward_role",
+                {"guild_id": guild_id, "reward_role": role_id},
+            )
             self.conn.commit()
         except sqlite3.DatabaseError:
             pass
@@ -293,46 +291,39 @@ class IgnoredChannels:
         self.conn = conn
         self.database = database
 
-    def get(self, channel_id, guild_id):
+    def get(self, channel_id: int, guild_id: int) -> IgnoredChannel:
         try:
             ignored_channel = self.conn.execute(
                 "SELECT * FROM ignored_channels WHERE channel_id=:channel_id AND guild_id=:guild_id",
-                {
-                    "channel_id": channel_id,
-                    "guild_id": guild_id
-                }
+                {"channel_id": channel_id, "guild_id": guild_id},
             ).fetchone()
             guild = self.database.guilds.get_settings(guild_id)
             return (
-                IgnoredChannel(
-                    guild,
-                    ignored_channel["channel_id"]
-                )
+                IgnoredChannel(guild, ignored_channel["channel_id"])
                 if ignored_channel
                 else None
             )
         except sqlite3.DatabaseError:
             pass
 
-    def get_all(self, guild_id):
+    def get_all(self, guild_id: int) -> List[IgnoredChannel]:
         try:
             ignored_channels = self.conn.execute(
                 "SELECT * FROM ignored_channels WHERE guild_id=:guild_id",
-                {"guild_id": guild_id}
+                {"guild_id": guild_id},
             ).fetchall()
             guild = self.database.guilds.get_settings(guild_id)
             return [
-                IgnoredChannel(
-                    guild,
-                    channel["channel_id"]
-                )
+                IgnoredChannel(guild, channel["channel_id"])
                 for channel in ignored_channels
             ]
         except sqlite3.DatabaseError:
             pass
 
-    def save(self, ignored_channel: IgnoredChannel):
-        retrieved_ignored_channel = self.get(ignored_channel.channel, ignored_channel.guild.id)
+    def save(self, ignored_channel: IgnoredChannel) -> IgnoredChannel:
+        retrieved_ignored_channel = self.get(
+            ignored_channel.channel, ignored_channel.guild.id
+        )
         if not retrieved_ignored_channel:
             try:
                 values = (ignored_channel.guild.id, ignored_channel.channel)
@@ -343,13 +334,12 @@ class IgnoredChannels:
                 pass
         return self.get(ignored_channel.channel, ignored_channel.guild.id)
 
-    def delete(self, channel_id, guild_id):
+    def delete(self, channel_id: int, guild_id: int) -> None:
         try:
-            self.conn.execute("DELETE FROM ignored_channels WHERE channel_id=:channel_id guild_id=:guild_id",
-                              {
-                                  "channel_id": channel_id,
-                                  "guild_id": guild_id
-                              })
+            self.conn.execute(
+                "DELETE FROM ignored_channels WHERE channel_id=:channel_id guild_id=:guild_id",
+                {"channel_id": channel_id, "guild_id": guild_id},
+            )
             self.conn.commit()
         except sqlite3.DatabaseError:
             pass
@@ -360,63 +350,46 @@ class IgnoredRoles:
         self.conn = conn
         self.database = database
 
-    def get(self, role_id, guild_id):
+    def get(self, role_id: int, guild_id: int) -> IgnoredRole:
         try:
             ignored_role = self.conn.execute(
                 "SELECT * FROM ignored_roles WHERE role_id=:role_id AND guild_id=:guild_id",
-                {
-                    "roll_id": role_id,
-                    "guild_id": guild_id
-                }
+                {"roll_id": role_id, "guild_id": guild_id},
             ).fetchone()
             guild = self.database.guilds.get_settings(guild_id)
-            return (
-                IgnoredChannel(
-                    guild,
-                    ignored_role["role_id"]
-                )
-                if ignored_role
-                else None
-            )
+            return IgnoredRole(guild, ignored_role["role_id"]) if ignored_role else None
         except sqlite3.DatabaseError:
             pass
 
-    def get_all(self, guild_id):
+    def get_all(self, guild_id: int) -> List[IgnoredRole]:
         try:
             ignored_roles = self.conn.execute(
                 "SELECT * FROM ignored_roles WHERE guild_id=:guild_id",
-                {"guild_id": guild_id}
+                {"guild_id": guild_id},
             ).fetchall()
             guild = self.database.guilds.get_settings(guild_id)
-            return [
-                IgnoredChannel(
-                    guild,
-                    channel["role_id"]
-                )
-                for channel in ignored_roles
-            ]
+            return [IgnoredRole(guild, channel["role_id"]) for channel in ignored_roles]
         except sqlite3.DatabaseError:
             pass
 
-    def save(self, ignored_role: IgnoredChannel):
-        retrieved_ignored_role = self.get(ignored_role.channel, ignored_role.guild.id)
+    def save(self, ignored_role: IgnoredRole) -> IgnoredRole:
+        retrieved_ignored_role = self.get(ignored_role.role, ignored_role.guild.id)
         if not retrieved_ignored_role:
             try:
-                values = (ignored_role.guild.id, ignored_role.channel)
+                values = (ignored_role.guild.id, ignored_role.role)
                 sql = "INSERT INTO ignored_roles(guild_id, role_id) VALUES(?,?)"
                 self.conn.execute(sql, values)
                 self.conn.commit()
             except sqlite3.DatabaseError:
                 pass
-        return self.get(ignored_role.channel, ignored_role.guild.id)
+        return self.get(ignored_role.role, ignored_role.guild.id)
 
-    def delete(self, role_id, guild_id):
+    def delete(self, role_id: int, guild_id: int) -> None:
         try:
-            self.conn.execute("DELETE FROM ignored_roles WHERE role_id=:role_id guild_id=:guild_id",
-                              {
-                                  "role_id": role_id,
-                                  "guild_id": guild_id
-                              })
+            self.conn.execute(
+                "DELETE FROM ignored_roles WHERE role_id=:role_id guild_id=:guild_id",
+                {"role_id": role_id, "guild_id": guild_id},
+            )
             self.conn.commit()
         except sqlite3.DatabaseError:
             pass

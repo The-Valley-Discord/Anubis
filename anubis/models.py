@@ -25,11 +25,23 @@ class User:
     def level(self):
         i = 0
         while True:
-            xp_needed = self.guild.base + \
-                        (round(self.guild.base * (self.guild.modifier / 100) * i) * i)
+            xp_needed = self.guild.base + (
+                round(self.guild.base * (self.guild.modifier / 100) * i) * i
+            )
             if self.xp < xp_needed:
                 return i + 1
             i += 1
+
+    def xp_needed(self, level_modifier: int = 0) -> int:
+        level = self.level - 2 + level_modifier
+        if level == 0:
+            return self.guild.base
+        elif level < 0:
+            return 0
+        else:
+            return self.guild.base + (
+                round(self.guild.base * (self.guild.modifier / 100) * level) * level
+            )
 
     def grant_xp(self, xp_amount: int = None) -> None:
         if not xp_amount:
@@ -51,8 +63,9 @@ class Reward:
         elif level < 0:
             return 0
         else:
-            return self.guild.base + \
-                   (round(self.guild.base * (self.guild.modifier / 100) * level) * level)
+            return self.guild.base + (
+                round(self.guild.base * (self.guild.modifier / 100) * level) * level
+            )
 
 
 @dataclass
