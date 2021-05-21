@@ -11,6 +11,8 @@ from old_database import (
     get_ignored_channels,
 )
 
+from anubis import Anubis
+
 
 def calculate_level(guild_id, xp):
     guild = get_guild_settings(guild_id)
@@ -37,9 +39,7 @@ def calculate_xp_needed(guild_id, level):
         return base + (round(base * (modifier / 100) * level) * level)
 
 
-class Leveling(commands.Cog):
-    def __init__(self, bot):
-        self.bot = bot
+class Leveling(Anubis.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message):

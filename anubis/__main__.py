@@ -1,4 +1,5 @@
 import base64
+import logging
 import re
 import traceback
 from configparser import ConfigParser
@@ -9,9 +10,12 @@ from typing import Optional
 import discord
 from discord.ext import commands
 
-from anubis import Anubis, logging, Database, Guild
-from anubis.errors import AnticipatedError, Unauthorized, PleaseRestate
-from leveling import Leveling
+from anubis import cogs
+from anubis.customizations import Anubis
+from anubis.database import Database
+from anubis.errors import AnticipatedError, PleaseRestate, Unauthorized
+from anubis.models import Guild
+
 
 config = ConfigParser()
 config.read("./anubis.cfg")
@@ -39,7 +43,14 @@ bot = Anubis(
     help_command=None,
     intents=intents,
 )
-bot.add_cog(Leveling(bot))
+for cog in [
+    cogs.admin_commands,
+    cogs.leveling,
+    cogs.rewards,
+    cogs.settings,
+    cogs.user_commands,
+]:
+    bot.add_cog(cog(bot))
 
 
 def process_docstrings(text) -> str:
