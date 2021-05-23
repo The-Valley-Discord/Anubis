@@ -38,7 +38,7 @@ class Rewards(Anubis.Cog):
         await ctx.reply(f"Removed {role.mention} reward", color=ctx.Color.I_GUESS)
 
     @commands.command()
-    @commands.has_guild_permissions(manage_messages=True)
+    @Anubis.has_guild_manage_message_or_in_user_bot_channel()
     async def showrewards(self, ctx: Anubis.Context):
         """Displays all the rewards for this server."""
         rewards = ctx.database.rewards.get_all(ctx.guild.id)

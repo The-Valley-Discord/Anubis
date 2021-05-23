@@ -184,13 +184,11 @@ class AdminCommands(Anubis.Cog):
             retrieved_user = await self.bot.fetch_user(user.id)
             if retrieved_user:
                 user_msg.append(f"{retrieved_user.mention}\n")
-        print(f"Channels: {channel_msg} Roles: {role_msg} Users: {user_msg}")
         embeds: List[discord.Embed] = []
         channel_fields = self.bot.create_embed_fields_from_list(channel_msg)
         role_fields = self.bot.create_embed_fields_from_list(role_msg)
         user_fields = self.bot.create_embed_fields_from_list(user_msg)
         embed = discord.Embed(title="Ignored Roles Users and Channels")
-        print(f"Channels: {channel_fields} Roles: {role_fields} Users: {user_fields}")
         embeds.append(embed)
         embeds = self.construct_ignored_embed(embeds, "Channels", channel_fields)
         embeds = self.construct_ignored_embed(embeds, "Roles", role_fields)
@@ -204,7 +202,6 @@ class AdminCommands(Anubis.Cog):
     ) -> List[discord.Embed]:
         embed = embeds[0]
         for value in values:
-            print("loop entered")
             if len(embed.fields) == 25:
                 embeds.append(embed)
                 embed = discord.Embed(title=f"{embeds[0].title} Continued")

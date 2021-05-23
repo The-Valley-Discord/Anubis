@@ -81,6 +81,7 @@ async def on_guild_join(guild: discord.guild):
 
 
 @bot.command()
+@bot.has_guild_manage_message_or_in_user_bot_channel()
 async def ping(ctx):
     embed = discord.Embed(
         title="**Ping**", description=f"Pong! {round(bot.latency * 1000)}ms"
@@ -90,6 +91,7 @@ async def ping(ctx):
 
 
 @bot.command(name="help")
+@bot.has_guild_manage_message_or_in_user_bot_channel()
 async def _help(ctx: Anubis.Context, *, subject: Optional[str]):
     """Display the usage of commands."""
 
