@@ -1,6 +1,6 @@
 import discord
 
-from anubis import Anubis, commands, Reward
+from anubis import Anubis, Reward, commands
 
 
 class Rewards(Anubis.Cog):
@@ -36,3 +36,20 @@ class Rewards(Anubis.Cog):
         `role` is the role that is to be removed. This can be a mention, id or name."""
         ctx.database.rewards.delete(ctx.guild.id, role.id)
         await ctx.reply(f"Removed {role.mention} reward", color=ctx.Color.I_GUESS)
+
+    @commands.command()
+    @commands.has_guild_permissions(manage_messages=True)
+    async def showrewards(self, ctx: Anubis.Context):
+        """Displays all the rewards for this server."""
+        rewards = ctx.database.rewards.get_all(ctx.guild.id)
+        if not rewards:
+            await ctx.reply("This guild does not have any rewards.")
+            return
+        rewards.sort(key=lambda x: x.level, reverse=False)
+        msg = [
+            f"Level:{reward.level} Role: {ctx.guild.get_role(reward.role).mention}"
+            for reward in rewards
+        ]
+        await ctx.reply(
+            title="Rewards", msg="\n".join(msg), color=ctx.Color.AUTOMATIC_BLUE
+        )

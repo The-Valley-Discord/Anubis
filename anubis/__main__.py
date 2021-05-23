@@ -16,7 +16,6 @@ from anubis.database import Database
 from anubis.errors import AnticipatedError, PleaseRestate, Unauthorized
 from anubis.models import Guild
 
-
 config = ConfigParser()
 config.read("./anubis.cfg")
 
@@ -44,11 +43,11 @@ bot = Anubis(
     intents=intents,
 )
 for cog in [
-    cogs.admin_commands,
-    cogs.leveling,
-    cogs.rewards,
-    cogs.settings,
-    cogs.user_commands,
+    cogs.AdminCommands,
+    cogs.Leveling,
+    cogs.Rewards,
+    cogs.Settings,
+    cogs.UserCommands,
 ]:
     bot.add_cog(cog(bot))
 
@@ -58,7 +57,11 @@ def process_docstrings(text) -> str:
     return re.sub(
         r"(.+)\n *",
         r"\1 ",
-        Template(text).safe_substitute({"pfx": bot.config["discord"]["prefix"],}),
+        Template(text).safe_substitute(
+            {
+                "pfx": bot.config["discord"]["prefix"],
+            }
+        ),
     )
 
 
@@ -71,7 +74,7 @@ async def on_ready():
 
 
 @bot.event
-async def on_guild_join(guild):
+async def on_guild_join(guild: discord.guild):
     fetched_guild = bot.database.guilds.get_settings(guild.id)
     if fetched_guild is None:
         bot.database.guilds.save(Guild(guild.id, 3, 15, 50, 5, 0, 0))
@@ -98,16 +101,16 @@ async def _help(ctx: Anubis.Context, *, subject: Optional[str]):
         out += "`"
         return out
 
-    embed = discord.Embed(color=ctx.Color.I_GUESS, title="Fuzzy Manual")
+    embed = discord.Embed(color=ctx.Color.I_GUESS, title="Anubis Manual")
 
     if not subject:
         embed.description = process_docstrings(
-            f"""This is [Fuzzy]({ctx.bot.config['info']['source']}), a general-purpose moderation bot for Discord.
+            f"""This is [Anubis]({ctx.bot.config['info']['source']}), a general-purpose moderation bot for Discord.
 
 
-            For detailed help on any command, you can use `{signature(_help)}`. Fuzzy
+            For detailed help on any command, you can use `{signature(_help)}`. Anubis
             is [open-source]({ctx.bot.config['info']['source']}). This instance runs version
-            {metadata.version('fuzzy')} and is active on {len(ctx.bot.guilds)} servers with
+            {metadata.version('anubis')} and is active on {len(ctx.bot.guilds)} servers with
             {len(ctx.bot.users)} members."""
         )
 
@@ -185,7 +188,9 @@ async def on_command_error(ctx: Anubis.Context, error):
         return
     elif isinstance(error, commands.UserInputError):
         await ctx.reply(
-            str(error), title=PleaseRestate.TEXT, color=ctx.Color.BAD,
+            str(error),
+            title=PleaseRestate.TEXT,
+            color=ctx.Color.BAD,
         )
         return
     elif isinstance(error, commands.CommandNotFound):
@@ -198,7 +203,8 @@ async def on_command_error(ctx: Anubis.Context, error):
             (error_int.bit_length() + 7) // 8, byteorder="little"
         )
         error_id = str(
-            base64.urlsafe_b64encode(error_bytes), encoding="utf-8",
+            base64.urlsafe_b64encode(error_bytes),
+            encoding="utf-8",
         ).replace("=", "")
 
         ctx.log.error(

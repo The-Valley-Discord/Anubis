@@ -1,96 +1,80 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 
 import discord
 from discord.ext import commands
-from old_database import (
-    get_guild_settings,
-    get_user,
-    add_user,
-    update_user_xp,
-    get_guild_rewards,
-    get_ignored_channels,
-)
 
-from anubis import Anubis
-
-
-def calculate_level(guild_id, xp):
-    guild = get_guild_settings(guild_id)
-    base = guild[2]
-    modifier = guild[3]
-    i = 0
-    while True:
-        xp_needed = base + (round(base * (modifier / 100) * i) * i)
-        if xp < xp_needed:
-            return i + 1
-        i += 1
-
-
-def calculate_xp_needed(guild_id, level):
-    guild = get_guild_settings(guild_id)
-    base = guild[2]
-    modifier = guild[3]
-    level -= 2
-    if level == 0:
-        return base
-    elif level < 0:
-        return 0
-    else:
-        return base + (round(base * (modifier / 100) * level) * level)
+from anubis import Anubis, User
 
 
 class Leveling(Anubis.Cog):
-
     @commands.Cog.listener()
-    async def on_message(self, message):
-        ignored_channels = get_ignored_channels(message.guild.id)
-        if message.author.bot or message.is_system():
-            pass
-        elif message.channel.id in ignored_channels:
-            pass
-        else:
-            guild = get_guild_settings(message.guild.id)
-            text_time = timedelta(minutes=guild[1])
-            amount = guild[4]
-            timeout = datetime.utcnow() + text_time
-            user = get_user(message.author.id, message.guild.id)
-            if user is None:
-                new_user = (message.guild.id, message.author.id, 0, timeout, False)
-                add_user(new_user)
-                user = get_user(message.author.id, message.guild.id)
-            next_xp_time = datetime.strptime(user[3], "%Y-%m-%d %H:%M:%S.%f")
-            freeze_role = 0
-            if message.guild.id == 539925898128785460:
-                freeze_role = self.bot.get_guild(539925898128785460).get_role(
-                    627499927299424266
+    async def on_message(self, message: discord.Message):
+        ignored_channels = self.bot.database.ignored_channels.get_all(message.guild.id)
+        ignored_roles = self.bot.database.ignored_roles.get_all(message.guild.id)
+        if ignored_roles:
+            ignored_role_ids = [role.role for role in ignored_roles]
+            if any(item.id in ignored_role_ids for item in message.author.roles):
+                return
+        if (
+            message.author.bot
+            or message.is_system()
+            or message.channel.id in ignored_channels
+        ):
+            return
+        user = self.bot.database.users.get(message.author.id, message.guild.id)
+        if not user:
+            self.bot.database.users.save(
+                User(
+                    message.author.id,
+                    self.bot.database.guilds.get_settings(message.guild.id),
+                    0,
+                    datetime.utcnow(),
+                    False,
                 )
-            if user[4] or freeze_role in message.author.roles:
-                pass
-            elif next_xp_time < datetime.utcnow():
-                new_xp = user[2] + amount
-                previous_level = calculate_level(message.guild.id, user[2])
-                update_user_xp(message.author.id, message.guild.id, new_xp, timeout)
-                user_level = calculate_level(message.guild.id, new_xp)
-                rewards = get_guild_rewards(message.guild.id)
-                log = message.guild.get_channel(guild[6])
-                if user_level > previous_level and log is not None:
-                    embed = discord.Embed(
-                        description=f"{message.author.name} has leveled to level {user_level}."
-                    )
-                    embed.set_author(name=f"{message.author.id}")
-                    embed.timestamp = datetime.utcnow()
-                    await log.send(embed=embed)
-                if len(rewards) > 0:
-                    for reward in rewards:
-                        role = message.guild.get_role(reward[1])
-                        if role in message.author.roles:
-                            pass
-                        elif reward[2] <= user_level:
+            )
+            return
+        if user.ignore_xp_gain:
+            return
+        elif user.timeout < datetime.utcnow():
+            previous_level = user.level
+            user.grant_xp()
+            self.bot.database.users.save(user)
+            rewards = self.bot.database.rewards.get_all(message.guild.id)
+            if user.level > previous_level:
+                embed = discord.Embed(
+                    description=f"{message.author.mention} has leveled to level {user.level}.",
+                    color=self.bot.Context.Color.AUTOMATIC_BLUE,
+                )
+                embed.set_author(
+                    name=f"{message.author.name}#{message.author.discriminator}"
+                )
+                embed.set_footer(text=f"{message.author.id}")
+                await self.bot.post_log(
+                    user.guild, embed=embed, timestamp=datetime.utcnow()
+                )
+            if rewards:
+                for reward in rewards:
+                    role = message.guild.get_role(reward.role)
+                    if role in message.author.roles:
+                        return
+                    elif reward.level <= user.level:
+                        try:
                             await message.author.add_roles(role)
-                            if log is not None:
-                                embed = discord.Embed(
-                                    description=f"{message.author.name} has earned {role.mention}"
-                                )
-                                embed.set_author(name=f"{message.author.id}")
-                                embed.timestamp = datetime.utcnow()
-                                await log.send(embed=embed)
+                            embed = discord.Embed(
+                                description=f"{message.author.mention} has earned {role.mention}",
+                                color=self.bot.Context.Color.AUTOMATIC_BLUE,
+                            )
+                            embed.set_author(
+                                name=f"{message.author.name}#{message.author.discriminator}"
+                            )
+                            embed.set_footer(text=f"{message.author.id}")
+                            await self.bot.post_log(
+                                user.guild, embed=embed, timestamp=datetime.utcnow()
+                            )
+                        except discord.Forbidden:
+                            await self.bot.post_log(
+                                user.guild,
+                                msg=f"Anubis does not have permission to add this role: {role.mention}",
+                                color=self.bot.Context.Color.BAD,
+                                timestamp=datetime.utcnow(),
+                            )

@@ -1,16 +1,26 @@
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 
 
 @dataclass
 class Guild:
     id: int
-    text_timeout: int
+    _text_timeout: int
     base: int
     modifier: int
     reward_amount: int
     user_channel: int
     log_channel: int
+
+    @property
+    def text_timeout(self):
+        return timedelta(minutes=self._text_timeout)
+
+    def get_text_timeout(self):
+        return self._text_timeout
+
+    def set_text_timeout(self, new_timeout: int):
+        self._text_timeout = new_timeout
 
 
 @dataclass
@@ -47,6 +57,7 @@ class User:
         if not xp_amount:
             xp_amount = self.guild.reward_amount
         self.xp += xp_amount
+        self.timeout = datetime.utcnow() + self.guild.text_timeout
 
 
 @dataclass

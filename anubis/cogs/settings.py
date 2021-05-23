@@ -6,15 +6,18 @@ from anubis import Anubis, commands
 
 
 class Settings(Anubis.Cog):
-    @commands.command(alias="levelset")
+    @commands.command()
     @commands.has_guild_permissions(manage_messages=True)
-    async def level_set(
+    async def levelset(
         self,
         ctx: Anubis.Context,
         setting: str = "view",
         value: typing.Union[discord.TextChannel, int] = "view",
     ):
-        guild = ctx.database.guilds.get_guild_settings(ctx.guild.id)
+        """Adjusts the settings for the server. If no options are provided then it will post the settings.
+        `Setting` is the option to adjust.
+        `Value` is the new value."""
+        guild = ctx.database.guilds.get_settings(ctx.guild.id)
         if value == "view":
             user_channel = ctx.guild.get_channel(guild.user_channel)
             if user_channel is None:
@@ -39,7 +42,7 @@ class Settings(Anubis.Cog):
             )
             return
         elif setting.lower() == "texttime":
-            guild.text_timeout = value
+            guild.set_text_timeout(value)
             await ctx.reply(f"text timeout now set to {value} minutes.")
         elif setting.lower() == "base":
             guild.base = value

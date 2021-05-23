@@ -70,7 +70,7 @@ class Anubis(commands.Bot):
             color: Color = Color.GOOD,
             embed: discord.Embed = None,
             delete_after: float = None,
-            timestamp: datetime = None,
+            timestamp: datetime = datetime.utcnow(),
         ):
             """Helper for sending embedded replies"""
             if not embed:
@@ -153,7 +153,8 @@ class Anubis(commands.Bot):
                     name="and judging the content of your soul.",
                 ),
                 Activity(
-                    type=ActivityType.listening, name="to the souls of the damned.",
+                    type=ActivityType.listening,
+                    name="to the souls of the damned.",
                 ),
             ]
         )
@@ -221,3 +222,22 @@ class Anubis(commands.Bot):
             )
 
         return commands.check(predicate)
+
+    @staticmethod
+    def create_embed_fields_from_list(
+        message_list: typing.List[str],
+    ) -> typing.List[str]:
+        length = 0
+        msg = ""
+        fields = []
+        for message in message_list:
+            if len(message) > 2048:
+                raise ValueError("Individual line is too long.")
+            if length + len(message) > 2048:
+                fields.append(msg)
+                msg = ""
+            msg += message
+            length = len(msg)
+        if len(msg) > 0:
+            fields.append(msg)
+        return fields

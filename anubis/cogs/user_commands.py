@@ -1,17 +1,25 @@
-from anubis import Anubis, commands, discord, Guild, Reward, typing, datetime
+from anubis import Anubis, Reward, commands, datetime, discord, typing
 
 
 class UserCommands(Anubis.Cog):
     @commands.command()
     @Anubis.has_guild_manage_message_or_in_user_bot_channel()
     async def level(self, ctx: Anubis.Context, user: discord.User = "me"):
-        guild: Guild = ctx.database.guilds.get_settings(ctx.guild.id)
+        """Provides the stats of the provided user
+        `User` is the user to lookup. This can be an Id, Mention, or Name."""
         if user == "me":
             user = ctx.author
         retrieved_user = ctx.database.users.get(user.id, ctx.guild.id)
+        if not retrieved_user:
+            await ctx.reply(
+                msg="That user could not be found.",
+                color=ctx.Color.BAD,
+                timestamp=datetime.utcnow(),
+            )
+            return
         user_level = retrieved_user.level
         rewards = ctx.database.rewards.get_all(ctx.guild.id)
-        next_reward = Reward(guild, 0, 0)
+        next_reward = Reward(retrieved_user.guild, 0, 0)
         for reward1 in rewards:
             if reward1.level <= user_level:
                 pass
@@ -46,10 +54,13 @@ class UserCommands(Anubis.Cog):
     async def leaderboard(
         self, ctx: Anubis.Context, user: typing.Union[discord.User, str] = "all"
     ):
+        """Posts the xp leaderboard.
+        `User` is the user to lookup. This can be an Id, Mention, Name or `Me` for yourself.
+        This is optional. If no user is provided than it will post the top 10."""
         ranked_users = ctx.database.users.get_ranked_users(ctx.guild.id)
-        if not isinstance(user, discord.User) and user.lower() == "me":
+        if isinstance(user, str) and user.lower() == "me":
             user = ctx.author
-        if user.lower() == "all":
+        if isinstance(user, str) and user.lower() == "all":
             leader_board_text = ""
             i = 0
             while i < 10 and i < len(ranked_users):
@@ -62,11 +73,18 @@ class UserCommands(Anubis.Cog):
                 msg=leader_board_text,
                 color=ctx.Color.AUTOMATIC_BLUE,
                 subtitle=f"Total Users {len(ranked_users)}",
-                timestamp=datetime.utcnow(),
             )
             return
-        if isinstance(user, discord.User):
+        if isinstance(user, discord.User) or isinstance(user, discord.Member):
             requesting_user = ctx.database.users.get(user.id, ctx.guild.id)
+            if not requesting_user:
+                await ctx.reply(
+                    msg="That user could not be found.",
+                    color=ctx.Color.BAD,
+                    subtitle=f"Total Users {len(ranked_users)}",
+                    timestamp=datetime.utcnow(),
+                )
+                return
             leader_board_text = ""
             i = 0
             user_index = ranked_users.index(requesting_user)
@@ -89,6 +107,5 @@ class UserCommands(Anubis.Cog):
                 msg=leader_board_text,
                 color=ctx.Color.AUTOMATIC_BLUE,
                 subtitle=f"Total Users {len(ranked_users)}",
-                timestamp=datetime.utcnow(),
             )
             return

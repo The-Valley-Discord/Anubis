@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "anubis"
+name = "Anubis"
 version = "2.0.0"
 description = "Anubis is a basic discord leveling bot."
 authors = ["Runtime-Ali <57050083+Runtime-Ali@users.noreply.github.com>"]

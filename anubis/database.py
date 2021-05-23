@@ -3,7 +3,7 @@ import sqlite3
 from pathlib import Path
 from typing import List
 
-from models import *
+from anubis.models import *
 
 
 class Database:
@@ -88,7 +88,7 @@ class Guilds:
                     "log_channel=:log_channel "
                     "WHERE guild_id=:guild_id",
                     {
-                        "text_time": guild.text_timeout,
+                        "text_time": guild.get_text_timeout(),
                         "base": guild.base,
                         "modifier": guild.modifier,
                         "amount": guild.reward_amount,
@@ -104,7 +104,7 @@ class Guilds:
             try:
                 values = (
                     guild.id,
-                    guild.text_timeout,
+                    guild.get_text_timeout(),
                     guild.base,
                     guild.modifier,
                     guild.reward_amount,
@@ -148,6 +148,28 @@ class Users:
                 if user
                 else None
             )
+
+    def get_all_ignored(self, guild_id: int) -> List[User]:
+        users = None
+        guild = self.database.guilds.get_settings(guild_id)
+        try:
+            users = self.conn.execute(
+                "SELECT * FROM user_levels WHERE guild_id=:guild_id AND ignore_xp_gain=:ignore_xp_gain",
+                {"guild_id": guild_id, "ignore_xp_gain": True},
+            ).fetchall()
+        except sqlite3.DatabaseError:
+            pass
+        finally:
+            return [
+                User(
+                    user["user_id"],
+                    guild,
+                    user["xp"],
+                    user["timeout"],
+                    bool(user["ignore_xp_gain"]),
+                )
+                for user in users
+            ]
 
     def save(self, user: User) -> User:
         retrieved_user = self.get(user.id, user.guild.id)
@@ -337,7 +359,7 @@ class IgnoredChannels:
     def delete(self, channel_id: int, guild_id: int) -> None:
         try:
             self.conn.execute(
-                "DELETE FROM ignored_channels WHERE channel_id=:channel_id guild_id=:guild_id",
+                "DELETE FROM ignored_channels WHERE channel_id=:channel_id AND guild_id=:guild_id",
                 {"channel_id": channel_id, "guild_id": guild_id},
             )
             self.conn.commit()
@@ -368,7 +390,7 @@ class IgnoredRoles:
                 {"guild_id": guild_id},
             ).fetchall()
             guild = self.database.guilds.get_settings(guild_id)
-            return [IgnoredRole(guild, channel["role_id"]) for channel in ignored_roles]
+            return [IgnoredRole(guild, role["role_id"]) for role in ignored_roles]
         except sqlite3.DatabaseError:
             pass
 
@@ -387,7 +409,7 @@ class IgnoredRoles:
     def delete(self, role_id: int, guild_id: int) -> None:
         try:
             self.conn.execute(
-                "DELETE FROM ignored_roles WHERE role_id=:role_id guild_id=:guild_id",
+                "DELETE FROM ignored_roles WHERE role_id=:role_id AND guild_id=:guild_id",
                 {"role_id": role_id, "guild_id": guild_id},
             )
             self.conn.commit()
