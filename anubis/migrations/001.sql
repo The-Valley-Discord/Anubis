@@ -26,3 +26,7 @@ create table if not exists ignored_channels (
 guild_id integer,
 channel_id integer
 );
+
+CREATE TABLE IF NOT EXISTS applied_migrations (
+    number INTEGER PRIMARY KEY
+);
