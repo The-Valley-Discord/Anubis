@@ -56,7 +56,7 @@ class Leveling(Anubis.Cog):
                 for reward in rewards:
                     role = message.guild.get_role(reward.role)
                     if role in message.author.roles:
-                        return
+                        pass
                     elif reward.level <= user.level:
                         try:
                             await message.author.add_roles(role)
