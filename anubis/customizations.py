@@ -140,11 +140,11 @@ class Anubis(commands.Bot):
         self.log.setLevel(logging.INFO)
         self.database: Database = database
         self.initial_extensions = [
-            'anubis.cogs.admin_commands',
-            'anubis.cogs.leveling',
-            'anubis.cogs.rewards',
-            'anubis.cogs.settings',
-            'anubis.cogs.user_commands'
+            "anubis.cogs.admin_commands",
+            "anubis.cogs.leveling",
+            "anubis.cogs.rewards",
+            "anubis.cogs.settings",
+            "anubis.cogs.user_commands",
         ]
         self.session = None
         super().__init__(command_prefix=config["discord"]["prefix"], **kwargs)

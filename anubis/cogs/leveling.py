@@ -9,8 +9,14 @@ from anubis import Anubis, User
 class Leveling(Anubis.Cog):
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
-        ignored_channels = [channel.channel for channel in self.bot.database.ignored_channels.get_all(message.guild.id)]
-        ignored_roles = [role.role for role in self.bot.database.ignored_roles.get_all(message.guild.id)]
+        ignored_channels = [
+            channel.channel
+            for channel in self.bot.database.ignored_channels.get_all(message.guild.id)
+        ]
+        ignored_roles = [
+            role.role
+            for role in self.bot.database.ignored_roles.get_all(message.guild.id)
+        ]
         if (
             message.author.bot
             or message.is_system()
@@ -61,12 +67,16 @@ class Leveling(Anubis.Cog):
                     return
                 try:
                     await message.author.add_roles(*roles, reason="Earned by leveling.")
-                    embed = discord.Embed(
-                        description=f"{message.author.mention} has earned {' '.join([role.mention for role in roles])}",
-                        color=self.bot.Context.Color.AUTOMATIC_BLUE,
-                    ).set_author(
-                        name=f"{message.author.name}#{message.author.discriminator}"
-                    ).set_footer(text=f"{message.author.id}")
+                    embed = (
+                        discord.Embed(
+                            description=f"{message.author.mention} has earned {' '.join([role.mention for role in roles])}",
+                            color=self.bot.Context.Color.AUTOMATIC_BLUE,
+                        )
+                        .set_author(
+                            name=f"{message.author.name}#{message.author.discriminator}"
+                        )
+                        .set_footer(text=f"{message.author.id}")
+                    )
                     await self.bot.post_log(
                         user.guild,
                         embed=embed,

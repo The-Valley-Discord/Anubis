@@ -210,7 +210,9 @@ async def on_command_error(ctx: Anubis.Context, error):
             channel_id = ctx.bot.config["log"].get("error_log_id")
             if channel_id:
                 channel = ctx.bot.get_channel(int(channel_id))
-                tb_lines = traceback.format_tb(error.__cause__.__traceback__ if error.__cause__ else None)
+                tb_lines = traceback.format_tb(
+                    error.__cause__.__traceback__ if error.__cause__ else None
+                )
                 tb_lines = "".join(tb_lines)
 
                 await channel.send(
