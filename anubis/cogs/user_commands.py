@@ -45,7 +45,7 @@ class UserCommands(Anubis.Cog):
                 value=f"{role_reward.mention}\n at level {next_reward.level}",
                 inline=True,
             )
-        embed.set_thumbnail(url=user.avatar.url)
+        embed.set_thumbnail(url=user.display_avatar.url)
         embed.set_footer(text=f"{ctx.guild.name}", icon_url=ctx.guild.icon.url if ctx.guild.icon else None)
         await ctx.send(embed=embed)
 
