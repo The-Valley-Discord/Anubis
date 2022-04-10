@@ -53,3 +53,7 @@ class Rewards(Anubis.Cog):
         await ctx.reply(
             title="Rewards", msg="\n".join(msg), color=ctx.Color.AUTOMATIC_BLUE
         )
+
+
+async def setup(bot):
+    await bot.add_cog(Rewards(bot))

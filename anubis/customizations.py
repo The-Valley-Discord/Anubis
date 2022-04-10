@@ -5,7 +5,9 @@ import typing
 from copy import copy
 from datetime import datetime, timezone
 
+import aiohttp
 import discord
+from anubis.models import Guild
 from discord import Activity, ActivityType
 from discord.ext import commands
 
@@ -65,17 +67,17 @@ class Anubis(commands.Bot):
         async def reply(
             self,
             msg: str = None,
-            title: str = discord.Embed.Empty,
+            title: str = None,
             subtitle: str = None,
             color: Color = Color.GOOD,
             embed: discord.Embed = None,
             delete_after: float = None,
-            timestamp: datetime = datetime.utcnow(),
+            timestamp: datetime = discord.utils.utcnow(),
         ):
             """Helper for sending embedded replies"""
             if not embed:
                 if not subtitle:
-                    subtitle = discord.Embed.Empty
+                    subtitle = None
 
                 lines = str(msg).split("\n")
                 buf = ""
@@ -134,11 +136,27 @@ class Anubis(commands.Bot):
 
     def __init__(self, config, database: Database, **kwargs):
         self.config = config
-
         self.log = logging.getLogger("Anubis")
         self.log.setLevel(logging.INFO)
         self.database: Database = database
+        self.initial_extensions = [
+            'anubis.cogs.admin_commands',
+            'anubis.cogs.leveling',
+            'anubis.cogs.rewards',
+            'anubis.cogs.settings',
+            'anubis.cogs.user_commands'
+        ]
+        self.session = None
         super().__init__(command_prefix=config["discord"]["prefix"], **kwargs)
+
+    async def setup_hook(self):
+        self.session = aiohttp.ClientSession()
+        for ext in self.initial_extensions:
+            await self.load_extension(ext)
+
+    async def close(self):
+        await super().close()
+        await self.session.close()
 
     async def get_context(self, message, *, cls=Context):
         return await super().get_context(message, cls=cls)
@@ -163,7 +181,7 @@ class Anubis(commands.Bot):
     async def direct_message(
         to: typing.Union[discord.Member, discord.User],
         msg: str = None,
-        title: str = discord.Embed.Empty,
+        title: str = None,
         subtitle: str = None,
         color: Context.Color = Context.Color.GOOD,
         embed: discord.Embed = None,
@@ -174,7 +192,7 @@ class Anubis(commands.Bot):
             return None
         if not embed:
             if not subtitle:
-                subtitle = discord.Embed.Empty
+                subtitle = None
 
             lines = str(msg).split("\n")
             buf = ""

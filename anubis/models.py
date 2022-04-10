@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 
 @dataclass
@@ -57,7 +57,7 @@ class User:
         if not xp_amount:
             xp_amount = self.guild.reward_amount
         self.xp += xp_amount
-        self.timeout = datetime.utcnow() + self.guild.text_timeout
+        self.timeout = datetime.now(timezone.utc) + self.guild.text_timeout
 
 
 @dataclass

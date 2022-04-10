@@ -18,7 +18,7 @@ same work as you do accidentally. Then, you can start actually working on it:
 ### 1. Prerequisites
 
 First you'll want [poetry]. If you don't install Poetry, you will need to check that 
-you have [Python 3.9] or later available.
+you have [Python 3.10] or later available.
 
 You also need [git] and a Discord bot token, which you can get from the [Applications page] of your Discord
 account. You might also need to create a server to test your bot in.

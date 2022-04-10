@@ -1,3 +1,4 @@
+import asyncio
 import base64
 import logging
 import re
@@ -5,12 +6,11 @@ import traceback
 from configparser import ConfigParser
 from importlib import metadata
 from string import Template
-from typing import Optional
+from typing import Optional, List
 
 import discord
 from discord.ext import commands
 
-from anubis import cogs
 from anubis.customizations import Anubis
 from anubis.database import Database
 from anubis.errors import AnticipatedError, PleaseRestate, Unauthorized
@@ -30,6 +30,7 @@ for source in config["log"]["suppress"].split(","):
 
 intents = discord.Intents.default()
 intents.members = True
+intents.message_content = True
 
 # noinspection PyTypeChecker
 database: Database = Database(config)
@@ -42,14 +43,6 @@ bot = Anubis(
     help_command=None,
     intents=intents,
 )
-for cog in [
-    cogs.AdminCommands,
-    cogs.Leveling,
-    cogs.Rewards,
-    cogs.Settings,
-    cogs.UserCommands,
-]:
-    bot.add_cog(cog(bot))
 
 
 def process_docstrings(text) -> str:
@@ -86,7 +79,7 @@ async def ping(ctx):
     embed = discord.Embed(
         title="**Ping**", description=f"Pong! {round(bot.latency * 1000)}ms"
     )
-    embed.set_author(name=f"{bot.user.name}", icon_url=bot.user.avatar_url)
+    embed.set_author(name=f"{bot.user.name}", icon_url=bot.user.avatar.url)
     await ctx.send(embed=embed)
 
 
@@ -122,21 +115,20 @@ async def _help(ctx: Anubis.Context, *, subject: Optional[str]):
 
         all_commands = ""
         standalone_commands = ""
-        previous_group = None
+        group_hierarchy: List[commands.GroupMixin] = []
         for cmd in sorted(ctx.bot.walk_commands(), key=lambda x: x.qualified_name):
             if cmd.__class__ == commands.Command:
                 if not cmd.parent:
                     standalone_commands += (
                         f"`{bot.command_prefix}{cmd.qualified_name}` "
                     )
+                    if group_hierarchy:
+                        group_hierarchy.clear()
                 else:
-                    if previous_group != cmd.parent:
-                        all_commands += (
-                            f"\n**`{bot.command_prefix}{cmd.parent.name}`** "
-                        )
+                    if len(group_hierarchy) != len(cmd.parents):
+                        all_commands += f"\n**`{bot.command_prefix}{' '.join([cmd.name for cmd in reversed(cmd.parents)])}`** "
                     all_commands += f"`{cmd.name}` "
-
-                previous_group = cmd.parent
+                group_hierarchy = cmd.parents
         embed.add_field(
             name="All Commands", value=standalone_commands + "\n" + all_commands
         )
@@ -218,7 +210,7 @@ async def on_command_error(ctx: Anubis.Context, error):
             channel_id = ctx.bot.config["log"].get("error_log_id")
             if channel_id:
                 channel = ctx.bot.get_channel(int(channel_id))
-                tb_lines = traceback.format_tb(error.__cause__.__traceback__)
+                tb_lines = traceback.format_tb(error.__cause__.__traceback__ if error.__cause__ else None)
                 tb_lines = "".join(tb_lines)
 
                 await channel.send(
@@ -236,9 +228,10 @@ async def on_command_error(ctx: Anubis.Context, error):
         )
 
 
-def main():  # pylint: disable=missing-function-docstring
-    bot.run(config["discord"]["token"])
+async def main():  # pylint: disable=missing-function-docstring
+    async with bot:
+        await bot.start(config["discord"]["token"])
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
