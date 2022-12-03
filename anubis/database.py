@@ -142,7 +142,7 @@ class Users:
                     user["user_id"],
                     self.database.guilds.get_settings(user["guild_id"]),
                     user["xp"],
-                    user["timeout"],
+                    user["timeout"].replace(tzinfo=timezone.utc),
                     bool(user["ignore_xp_gain"]),
                 )
                 if user
@@ -165,7 +165,7 @@ class Users:
                     user["user_id"],
                     guild,
                     user["xp"],
-                    user["timeout"],
+                    user["timeout"].replace(tzinfo=timezone.utc),
                     bool(user["ignore_xp_gain"]),
                 )
                 for user in users
@@ -222,7 +222,7 @@ class Users:
                 user["user_id"],
                 guild,
                 user["xp"],
-                user["timeout"],
+                user["timeout"].replace(tzinfo=timezone.utc),
                 bool(user["ignore_xp_gain"]),
             )
             for user in users

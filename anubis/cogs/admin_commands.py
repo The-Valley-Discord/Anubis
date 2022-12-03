@@ -126,7 +126,7 @@ class AdminCommands(Anubis.Cog):
         mention_list = ""
         failed_list = ""
         for arg in args:
-            if isinstance(arg, discord.Member):
+            if isinstance(arg, discord.User):
                 user = ctx.database.users.get(arg.id, ctx.guild.id)
                 user.ignore_xp_gain = False
                 ctx.database.users.save(user)
@@ -207,3 +207,7 @@ class AdminCommands(Anubis.Cog):
                 embed = discord.Embed(title=f"{embeds[0].title} Continued")
             embed.add_field(name=name, value=value)
         return embeds
+
+
+async def setup(bot):
+    await bot.add_cog(AdminCommands(bot))
