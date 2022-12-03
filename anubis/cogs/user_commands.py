@@ -14,7 +14,7 @@ class UserCommands(Anubis.Cog):
             await ctx.reply(
                 msg="That user could not be found.",
                 color=ctx.Color.BAD,
-                timestamp=datetime.utcnow(),
+                timestamp=discord.utils.utcnow(),
             )
             return
         user_level = retrieved_user.level
@@ -45,8 +45,11 @@ class UserCommands(Anubis.Cog):
                 value=f"{role_reward.mention}\n at level {next_reward.level}",
                 inline=True,
             )
-        embed.set_thumbnail(url=user.avatar_url)
-        embed.set_footer(text=f"{ctx.guild.name}", icon_url=ctx.guild.icon_url)
+        embed.set_thumbnail(url=user.display_avatar.url)
+        embed.set_footer(
+            text=f"{ctx.guild.name}",
+            icon_url=ctx.guild.icon.url if ctx.guild.icon else None,
+        )
         await ctx.send(embed=embed)
 
     @commands.command()
@@ -82,7 +85,7 @@ class UserCommands(Anubis.Cog):
                     msg="That user could not be found.",
                     color=ctx.Color.BAD,
                     subtitle=f"Total Users {len(ranked_users)}",
-                    timestamp=datetime.utcnow(),
+                    timestamp=discord.utils.utcnow(),
                 )
                 return
             leader_board_text = ""
@@ -109,3 +112,7 @@ class UserCommands(Anubis.Cog):
                 subtitle=f"Total Users {len(ranked_users)}",
             )
             return
+
+
+async def setup(bot):
+    await bot.add_cog(UserCommands(bot))

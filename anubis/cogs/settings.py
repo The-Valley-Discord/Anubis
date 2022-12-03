@@ -71,5 +71,10 @@ class Settings(Anubis.Cog):
             else:
                 guild.log_channel = value.id
                 await ctx.reply(f"Log Channel now set to {value.mention}.")
-
+        else:
+            raise commands.UserInputError(f"{setting} is not a valid setting option.")
         ctx.database.guilds.save(guild)
+
+
+async def setup(bot):
+    await bot.add_cog(Settings(bot))
