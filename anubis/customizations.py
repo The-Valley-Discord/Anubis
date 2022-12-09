@@ -231,7 +231,7 @@ class Anubis(commands.Bot):
 
     @staticmethod
     def has_guild_manage_message_or_in_user_bot_channel():
-        def predicate(ctx: Anubis.Context):
+        async def predicate(ctx: Anubis.Context):
             guild = ctx.database.guilds.get_settings(ctx.guild.id)
             return (
                 ctx.author.guild_permissions.manage_messages
