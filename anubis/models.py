@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
-
+from math import sqrt, floor
 
 @dataclass
 class Guild:
@@ -34,6 +34,8 @@ class User:
     @property
     def level(self):
         i = 0
+        if self.xp > 1000:
+            i = floor(sqrt(((self.xp - self.guild.base) * 100) / (self.guild.base * self.guild.modifier))) - 2
         while True:
             xp_needed = self.guild.base + (
                 round(self.guild.base * (self.guild.modifier / 100) * i) * i
